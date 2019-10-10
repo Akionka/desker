@@ -337,7 +337,7 @@ function imgui.OnDrawFrame()
               end
               if imgui.Button('Применить', imgui.ImVec2(198, 0)) then
                 sampSendChat('/desk clear')
-                sampSendChat(u8:decode('/desk '..data['desks'][selectedDesk]['text']))
+                sampSendChat(u8:decode('/desk '..data['accounts'][selectedAccount]['desks'][selectedDesk]['text']))
               end
             end
           imgui.EndChild()
