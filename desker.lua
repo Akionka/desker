@@ -1,7 +1,7 @@
 script_name('Desker')
 script_author('Akionka')
-script_version('1.0.0')
-script_version_number(1)
+script_version('1.0.1')
+script_version_number(2)
 script_moonloader(27)
 
 require 'deps' {
@@ -217,7 +217,7 @@ function imgui.OnDrawFrame()
               for i, v in ipairs(data['accounts'][selectedAccount]['desks']) do
                 if imgui.Selectable(v['title']..'##'..i, selectedDesk == i) then
                   tempBuffers['title']  = imgui.ImBuffer(v['title'], 32)
-                  tempBuffers['text']   = imgui.ImBuffer(v['text'], 100)
+                  tempBuffers['text']   = imgui.ImBuffer(v['text'], 256)
                   tempBuffers['skinId'] = imgui.ImInt(v['skinId'])
                   selectedDesk = i
                   skin_texture = imgui.CreateTextureFromFile(getGameDirectory()..'\\moonloader\\resource\\desker\\skins\\'..tempBuffers['skinId'].v..'.png')
@@ -227,7 +227,7 @@ function imgui.OnDrawFrame()
           imgui.EndChild()
           if selectedAccount ~= 0 and imgui.Button('Добавить##desk', imgui.ImVec2(145, 0)) then
             tempBuffers['titleCreate']  = imgui.ImBuffer('', 32)
-            tempBuffers['textCreate']   = imgui.ImBuffer('', 100)
+            tempBuffers['textCreate']   = imgui.ImBuffer('', 256)
             tempBuffers['skinIdCreate'] = imgui.ImInt(getCharModel(PLAYER_PED))
             imgui.OpenPopup('Добавление описания')
           end
