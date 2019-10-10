@@ -1,7 +1,7 @@
 script_name('Desker')
 script_author('Akionka')
-script_version('1.0.0')
-script_version_number(1)
+script_version('1.0.2')
+script_version_number(3)
 script_moonloader(27)
 
 require 'deps' {
@@ -156,15 +156,40 @@ function imgui.OnDrawFrame()
       imgui.BeginGroup()
         imgui.BeginChild('Accounts panel', imgui.ImVec2(145, -imgui.GetItemsLineHeightWithSpacing()), true)
           for i, v in ipairs(data['accounts']) do
-            if imgui.Selectable((v['serverId'] == 1 and 'TRP2' or 'TRP1')..'|'..v['nickname']..'##'..i, selectedAccount == i) then
+            if imgui.Selectable((v['serverId'] == 1 and 'TRP2' or 'TRP1')..'|'..v['nickname']..'##'..i, selectedAccount == i, imgui.SelectableFlags.AllowDoubleClick) then
               tempBuffers['nickname'] = imgui.ImBuffer(v['nickname'], 32)
               tempBuffers['serverId'] = imgui.ImInt(v['serverId'])
               selectedAccount = i
               selectedDesk = 0
+              if imgui.IsMouseDoubleClicked(0) then
+                imgui.OpenPopup('Изменить данные аккаунта##'..i)
+              end
+            end
+            if imgui.BeginPopupModal('Изменить данные аккаунта##'..i, nil, 64) then
+              imgui.InputText('Ник-нейм', tempBuffers['nickname'])
+              imgui.PushStyleColor(imgui.Col['Header'], Color(0xC3E88D90))
+              imgui.PushStyleColor(imgui.Col['HeaderHovered'], Color(0xC3E88DFF))
+              imgui.PushStyleColor(imgui.Col['HeaderActive'], Color(0x61616150))
+              imgui.ListBox('Сервер', tempBuffers['serverId'], {'TRP1', 'TRP2'}, imgui.ImInt(2))
+              imgui.PopStyleColor(3)
+              imgui.Separator()
+              imgui.SetCursorPosX((imgui.GetWindowWidth() - 240 + imgui.GetStyle().ItemSpacing.x) / 2)
+              if imgui.Button('Готово', imgui.ImVec2(120, 0)) then
+                v['nickname'] = tempBuffers['nickname'].v
+                v['serverId'] = tempBuffers['serverId'].v
+                saveData()
+                imgui.CloseCurrentPopup()
+              end
+              imgui.SameLine()
+              if imgui.Button('Отмена', imgui.ImVec2(120, 0)) then imgui.CloseCurrentPopup() end
+              imgui.EndPopup()
             end
           end
         imgui.EndChild()
         if imgui.Button('Добавить##account', imgui.ImVec2(selectedAccount == 0 and 145 or 70, 0)) then
+          local _, id = sampGetPlayerIdByCharHandle(PLAYER_PED)
+          tempBuffers['nickname'] = imgui.ImBuffer(sampGetPlayerNickname(id), 32)
+          tempBuffers['serverId'] = imgui.ImInt(serverIds[sampGetCurrentServerAddress()])
           imgui.OpenPopup('Добавление аккаунта')
         end
         imgui.SameLine()
@@ -178,13 +203,23 @@ function imgui.OnDrawFrame()
           imgui.Separator()
           imgui.SetCursorPosX((imgui.GetWindowWidth() - 240 + imgui.GetStyle().ItemSpacing.x) / 2)
           if imgui.Button('Готово', imgui.ImVec2(120, 0)) then
-            table.insert(data['accounts'], {
-              nickname = tempBuffers['nickname'].v,
-              serverId = tempBuffers['serverId'].v,
-              desks    = {},
-            })
-            saveData()
-            imgui.CloseCurrentPopup()
+            local denied   = false
+            for i, v in ipairs(data['accounts']) do
+              print(tempBuffers['nickname'].v, v['nickname'], tempBuffers['serverId'].v, v['serverId'])
+              if tempBuffers['nickname'].v == v['nickname'] and tempBuffers['serverId'].v == v['serverId'] then
+                denied = true
+                break
+              end
+            end
+            if not denied then
+              table.insert(data['accounts'], {
+                nickname = tempBuffers['nickname'].v,
+                serverId = tempBuffers['serverId'].v,
+                desks    = {},
+              })
+              saveData()
+              imgui.CloseCurrentPopup()
+            end
           end
           imgui.SameLine()
           if imgui.Button('Отмена', imgui.ImVec2(120, 0)) then
@@ -270,12 +305,6 @@ function imgui.OnDrawFrame()
           imgui.BeginChild('Information panel', imgui.ImVec2(0,0), true)
             if selectedDesk ~= 0 and data['accounts'][selectedAccount]['desks'][selectedDesk] ~= nil then
               imgui.InputText('Название', tempBuffers['title'])
-              imgui.InputText('Ник-нейм', tempBuffers['nickname'])
-              imgui.PushStyleColor(imgui.Col['Header'], Color(0xC3E88D90))
-              imgui.PushStyleColor(imgui.Col['HeaderHovered'], Color(0xC3E88DFF))
-              imgui.PushStyleColor(imgui.Col['HeaderActive'], Color(0x61616150))
-              imgui.ListBox('Сервер', tempBuffers['serverId'], {'TRP1', 'TRP2'}, imgui.ImInt(2))
-              imgui.PopStyleColor(3)
               if imgui.InputInt('Скин', tempBuffers['skinId'], 1, 1) then
                 if tempBuffers['skinId'].v > 311 then tempBuffers['skinId'].v = 311 end
                 if tempBuffers['skinId'].v < 1 then tempBuffers['skinId'].v = 0 end
@@ -548,7 +577,6 @@ function loadData()
   end
 
   local configFile = io.open(getWorkingDirectory()..'\\config\\desker.json', 'r')
-  -- data = decodeJson(configFile:read('*a'))
   local tempData = decodeJson(configFile:read('*a'))
   loadSettings(tempData['settings'], data['settings'])
   data['accounts'] = tempData['accounts']
