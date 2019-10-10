@@ -1,7 +1,7 @@
 script_name('Desker')
 script_author('Akionka')
-script_version('1.0.1')
-script_version_number(2)
+script_version('1.0.0')
+script_version_number(1)
 script_moonloader(27)
 
 require 'deps' {
@@ -494,7 +494,7 @@ function checkUpdates()
           if v(info[1]['tag_name']) > v(thisScript()['version']) then
             updatesAvaliable = true
             lastTagAvaliable = info[1]['tag_name']
-            alert('Найдено объявление. Текущая версия: {9932cc}'..thisScript()['version']..'{FFFFFF}, новая версия: {9932cc}'..info[0]['version']..'{FFFFFF}')
+            alert('Найдено объявление. Текущая версия: {9932cc}'..thisScript()['version']..'{FFFFFF}, новая версия: {9932cc}'..info[1]['tag_name']..'{FFFFFF}')
             return true
           else
             updatesAvaliable = false
