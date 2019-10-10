@@ -123,8 +123,9 @@ function applyCustomStyle()
   colors[clr['ModalWindowDarkening']] = ImVec4(0x21212180)
 end
 
-local mainWindowState = imgui.ImBool(false)
-local skin_texture    = nil
+local mainWindowState      = imgui.ImBool(false)
+local skin_texture         = nil
+local showErrorWrongSkinId = false
 
 local selectedTab     = 0
 local selectedAccount = 0
@@ -254,6 +255,7 @@ function imgui.OnDrawFrame()
                   tempBuffers['title']  = imgui.ImBuffer(v['title'], 32)
                   tempBuffers['text']   = imgui.ImBuffer(v['text'], 256)
                   tempBuffers['skinId'] = imgui.ImInt(v['skinId'])
+                  showErrorWrongSkinId = false
                   selectedDesk = i
                   skin_texture = imgui.CreateTextureFromFile(getGameDirectory()..'\\moonloader\\resource\\desker\\skins\\'..tempBuffers['skinId'].v..'.png')
                 end
@@ -308,7 +310,17 @@ function imgui.OnDrawFrame()
               if imgui.InputInt('Скин', tempBuffers['skinId'], 1, 1) then
                 if tempBuffers['skinId'].v > 311 then tempBuffers['skinId'].v = 311 end
                 if tempBuffers['skinId'].v < 1 then tempBuffers['skinId'].v = 0 end
+                showErrorWrongSkinId = false
+                for i, v in ipairs(data['accounts'][selectedAccount]['desks']) do
+                  if tempBuffers['skinId'].v == v['skinId'] and tempBuffers['skinId'].v ~= data['accounts'][selectedAccount]['desks'][selectedDesk]['skinId'] then
+                    showErrorWrongSkinId = true
+                    break
+                  end
+                end
                 skin_texture = imgui.CreateTextureFromFile(getWorkingDirectory()..'\\resource\\desker\\skins\\'..tempBuffers['skinId'].v..'.png')
+              end
+              if showErrorWrongSkinId then
+                imgui.TextColored(imgui.ImVec4(1, 0, 0, 1), 'Для данного скина уже установлено\nописание')
               end
               if skin_texture and imgui.CollapsingHeader('Skin') then
                 if tempBuffers['skinId'].v < 1 or tempBuffers['skinId'].v > 311 or tempBuffers['skinId'].v == 53 or tempBuffers['skinId'].v == 74 or tempBuffers['skinId'].v == 310 or tempBuffers['skinId'].v == 0 then
@@ -319,11 +331,20 @@ function imgui.OnDrawFrame()
               end
               imgui.InputTextMultiline('Описание', tempBuffers['text'], imgui.ImVec2(0, 50))
               if imgui.Button('Сохранить', imgui.ImVec2(96.5, 0)) then
-                data['accounts'][selectedAccount]['nickname']                      = tempBuffers['nickname'].v
-                data['accounts'][selectedAccount]['serverId']                      = tempBuffers['serverId'].v
-                data['accounts'][selectedAccount]['desks'][selectedDesk]['title']  = tempBuffers['title'].v
-                data['accounts'][selectedAccount]['desks'][selectedDesk]['text']   = tempBuffers['text'].v
-                data['accounts'][selectedAccount]['desks'][selectedDesk]['skinId'] = tempBuffers['skinId'].v
+                local denied = false
+                for i, v in ipairs(data['accounts'][selectedAccount]['desks']) do
+                  if tempBuffers['skinId'].v == v['skinId'] and tempBuffers['skinId'].v ~= data['accounts'][selectedAccount]['desks'][selectedDesk]['skinId'] then
+                    denied = true
+                    break
+                  end
+                end
+                if not denied then
+                  data['accounts'][selectedAccount]['nickname']                      = tempBuffers['nickname'].v
+                  data['accounts'][selectedAccount]['serverId']                      = tempBuffers['serverId'].v
+                  data['accounts'][selectedAccount]['desks'][selectedDesk]['title']  = tempBuffers['title'].v
+                  data['accounts'][selectedAccount]['desks'][selectedDesk]['text']   = tempBuffers['text'].v
+                  data['accounts'][selectedAccount]['desks'][selectedDesk]['skinId'] = tempBuffers['skinId'].v
+                end
                 saveData()
               end
               imgui.SameLine()
