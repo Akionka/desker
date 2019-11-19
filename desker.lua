@@ -1,22 +1,19 @@
 script_name('Desker')
 script_author('Akionka')
-script_version('1.0.2')
-script_version_number(3)
+script_version('1.0.3')
+script_version_number(4)
 script_moonloader(27)
 
 require 'deps' {
   'fyp:samp-lua',
   'fyp:moon-imgui',
-  'kikito:semver',
-  'donhomka:mimgui-addons',
+  'Akionka:lua-semver',
 }
 
 local sampev           = require 'lib.samp.events'
 local encoding         = require 'encoding'
 local imgui            = require 'imgui'
 local v                = require 'semver'
-local rkeys            = require 'rkeys'
-imgui.HotKey           = require 'imgui_addons'.HotKey
 
 local updatesAvaliable = false
 local lastTagAvaliable = '1.0'
